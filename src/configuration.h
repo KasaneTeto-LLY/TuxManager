@@ -52,6 +52,8 @@ class Configuration : public QObject
         bool RefreshPaused { false }; ///< True when periodic refresh is paused.
         bool UseCustomColorScheme { false };
         QVariantMap CustomColorScheme;
+        //! UI language as chosen by the user: "" = follow system, "en", "zh_CN", ...
+        QString Language;
         bool IsSuperuser { false };  ///< True when effective UID is 0 (runtime-only).
         uid_t EUID { 0 };            ///< Effective user ID captured at startup (runtime-only).
         bool IOMetricsEnabled { false }; ///< True when any Processes I/O column is visible (runtime-only).

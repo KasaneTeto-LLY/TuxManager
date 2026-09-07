@@ -47,6 +47,7 @@ class MainWindow : public QMainWindow
 
     private:
         void updateTabActivity(int index);
+        void buildMenus();
 
         Ui::MainWindow *ui;
 

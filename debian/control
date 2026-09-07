@@ -4,7 +4,8 @@ Priority: optional
 Maintainer: Petr Bena <petr@bena.rocks>
 Build-Depends: debhelper-compat (= 12),
  pkg-config,
- qtbase5-dev | qt6-base-dev
+ qtbase5-dev | qt6-base-dev,
+ qt6-l10n-tools | qttools5-dev-tools
 Standards-Version: 4.6.2
 Rules-Requires-Root: no
 
