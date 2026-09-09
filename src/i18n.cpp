@@ -28,6 +28,7 @@
 #include <QProcess>
 #include <QTimer>
 #include <QTranslator>
+#include <QtGlobal>
 
 namespace
 {
@@ -148,7 +149,11 @@ QString I18n::installTranslators()
 
     // Best effort: also localize Qt built-in dialogs (QMessageBox buttons etc.)
     // using the matching qtbase catalog from the Qt installation.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     const QString qtTranslationsDir = QLibraryInfo::path(QLibraryInfo::TranslationsPath);
+#else
+    const QString qtTranslationsDir = QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+#endif
     if (QFile::exists(qtTranslationsDir))
     {
         QStringList candidates;
@@ -194,4 +199,3 @@ void I18n::restartApplication()
         LOG_ERROR(QString("I18n: failed to restart %1, please start it manually").arg(appPath));
     }
 }
-
