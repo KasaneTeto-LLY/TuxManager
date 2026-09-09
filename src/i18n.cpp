@@ -23,6 +23,7 @@
 #include <QFile>
 #include <QLibraryInfo>
 #include <QLocale>
+#include <QStringList>
 #include <QTranslator>
 #include <QtGlobal>
 
@@ -41,24 +42,6 @@ namespace
         return t;
     }
 
-    // Directories that may contain our "<catalog>_<locale>.qm" files.
-    // The resource path is always available because translations are embedded
-    // at build time (:/i18n/), the filesystem paths cover packaged installs
-    // and development builds. A custom directory can be supplied through the
-    // TUX_MANAGER_I18N_DIR environment variable.
-    QStringList translationSearchDirs()
-    {
-        QStringList dirs;
-        const QString overrideDir = qEnvironmentVariable("TUX_MANAGER_I18N_DIR");
-        if (!overrideDir.isEmpty())
-            dirs << overrideDir;
-        dirs << QCoreApplication::applicationDirPath() + QStringLiteral("/translations");
-        dirs << QStringLiteral("/usr/share/tux-manager/translations");
-        dirs << QCoreApplication::applicationDirPath() + QStringLiteral("/../share/tux-manager/translations");
-        dirs << QStringLiteral(":/i18n");
-        return dirs;
-    }
-
     bool isEnglishLanguage(const QString &code)
     {
         if (code.isEmpty())
@@ -70,8 +53,8 @@ namespace
                || base == QStringLiteral("posix");
     }
 
-    // Try to load a catalog (e.g. "tux-manager" or "qtbase") for the given
-    // language. Exact match is preferred, then the language part only.
+    // Load an embedded application catalog. Exact locale match is preferred,
+    // then the language part only.
     bool loadCatalog(QTranslator *translator, const QString &catalog, const QString &language)
     {
         QStringList candidates;
@@ -80,19 +63,13 @@ namespace
         if (underscore > 0)
             candidates << language.left(underscore);
 
-        for (const QString &dir : translationSearchDirs())
+        for (const QString &lang : candidates)
         {
-            for (const QString &lang : candidates)
+            const QString path = QStringLiteral(":/i18n/") + catalog + QLatin1Char('_') + lang + QStringLiteral(".qm");
+            if (translator->load(path))
             {
-                const QString fileName = catalog + QLatin1Char('_') + lang + QStringLiteral(".qm");
-                const QString path = dir.endsWith(QLatin1Char('/')) ? dir + fileName : dir + QLatin1Char('/') + fileName;
-                if (!QFile::exists(path))
-                    continue;
-                if (translator->load(fileName, dir))
-                {
-                    LOG_DEBUG(QString("I18n: loaded %1 from %2").arg(fileName, dir));
-                    return true;
-                }
+                LOG_DEBUG(QString("I18n: loaded embedded catalog %1").arg(path));
+                return true;
             }
         }
         return false;
@@ -100,7 +77,7 @@ namespace
 
 }
 
-void I18n::installTranslators()
+void I18n::InstallTranslators()
 {
     const QString code = QLocale::system().name();
 

@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 
     // Install translations for the system language before any widget is
     // created, so all tr() calls already resolve to the right text.
-    I18n::installTranslators();
+    I18n::InstallTranslators();
 
     LOG_INFO(QString("%1 %2 starting (verbosity=%3)").arg(a.applicationName(), a.applicationVersion()).arg(verbosity));
 

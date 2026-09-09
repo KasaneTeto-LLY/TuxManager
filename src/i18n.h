@@ -24,7 +24,7 @@ namespace I18n
 {
     /// Install application and Qt translators for the system language.
     /// Must be called after QApplication exists and before widgets are created.
-    void installTranslators();
+    void InstallTranslators();
 }
 
 #endif // I18N_H

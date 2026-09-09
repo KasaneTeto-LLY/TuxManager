@@ -1,4 +1,3 @@
 debian/build/tux-manager usr/bin/
-debian/build/.qm/tux-manager_zh_CN.qm usr/share/tux-manager/translations/
 src/tux_manager_icon.svg usr/share/pixmaps/
 packaging/data/io.github.benapetr.TuxManager.desktop usr/share/applications/
