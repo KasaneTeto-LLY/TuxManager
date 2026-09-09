@@ -46,10 +46,9 @@ echo "Version: $APP_VERSION"
 echo ""
 
 # Preflight: check build dependencies and print install command if missing
-qt6_ready=false
-qt5_ready=false
 if command -v dpkg-query >/dev/null 2>&1; then
     missing=()
+    missing_groups=()
 
     require_pkg() {
         local pkg="$1"
@@ -58,19 +57,29 @@ if command -v dpkg-query >/dev/null 2>&1; then
         fi
     }
 
+    require_one_of() {
+        local group=("$@")
+        local found=""
+        local pkg
+        for pkg in "${group[@]}"; do
+            if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+                found="yes"
+                break
+            fi
+        done
+        if [ -z "$found" ]; then
+            missing_groups+=("${group[*]}")
+        fi
+    }
+
     require_pkg build-essential
     require_pkg debhelper
     require_pkg dpkg-dev
     require_pkg pkg-config
+    require_one_of qt6-base-dev qtbase5-dev
+    require_one_of qt6-l10n-tools qttools5-dev-tools
 
-    if dpkg-query -W -f='${Status}\n' qt6-base-dev qt6-l10n-tools 2>/dev/null | grep -c "install ok installed" | grep -q '^2$'; then
-        qt6_ready=true
-    fi
-    if dpkg-query -W -f='${Status}\n' qtbase5-dev qttools5-dev-tools 2>/dev/null | grep -c "install ok installed" | grep -q '^2$'; then
-        qt5_ready=true
-    fi
-
-    if [ ${#missing[@]} -gt 0 ] || { [ "$qt6_ready" = false ] && [ "$qt5_ready" = false ]; }; then
+    if [ ${#missing[@]} -gt 0 ] || [ ${#missing_groups[@]} -gt 0 ]; then
         echo "Missing build dependencies detected."
         echo ""
         echo "Install the following packages (or equivalent) and re-run:"
@@ -78,18 +87,23 @@ if command -v dpkg-query >/dev/null 2>&1; then
             if [ ${#missing[@]} -gt 0 ]; then
                 echo "  sudo apt-get install ${missing[*]}"
             fi
-            if [ "$qt6_ready" = false ] && [ "$qt5_ready" = false ]; then
-                echo "  sudo apt-get install qt6-base-dev qt6-l10n-tools"
-                echo "  or: sudo apt-get install qtbase5-dev qttools5-dev-tools"
+            if [ ${#missing_groups[@]} -gt 0 ]; then
+                echo ""
+                echo "Choose one package from each group:"
+                for group in "${missing_groups[@]}"; do
+                    for pkg in $group; do
+                        echo "  sudo apt-get install $pkg"
+                    done
+                    echo ""
+                done
             fi
         else
             for pkg in "${missing[@]}"; do
                 echo "  - $pkg"
             done
-            if [ "$qt6_ready" = false ] && [ "$qt5_ready" = false ]; then
-                echo "  - Qt6: qt6-base-dev and qt6-l10n-tools"
-                echo "  - Qt5: qtbase5-dev and qttools5-dev-tools"
-            fi
+            for group in "${missing_groups[@]}"; do
+                echo "  - one of: $group"
+            done
         fi
         echo ""
         exit 1
@@ -97,15 +111,9 @@ if command -v dpkg-query >/dev/null 2>&1; then
 
 fi
 
-# Resolve qmake for a complete Qt base + Linguist toolchain.
+# Resolve qmake (prefer qmake6, fallback to qmake)
 if [ -z "$QT_BIN_PATH" ]; then
-    if [ "$qt6_ready" = true ] && command -v qmake6 >/dev/null 2>&1; then
-        QMAKE_CMD="qmake6"
-    elif [ "$qt5_ready" = true ] && command -v qmake-qt5 >/dev/null 2>&1; then
-        QMAKE_CMD="qmake-qt5"
-    elif [ "$qt5_ready" = true ] && command -v qmake >/dev/null 2>&1; then
-        QMAKE_CMD="qmake"
-    elif command -v qmake6 >/dev/null 2>&1; then
+    if command -v qmake6 >/dev/null 2>&1; then
         QMAKE_CMD="qmake6"
     elif command -v qmake >/dev/null 2>&1; then
         QMAKE_CMD="qmake"

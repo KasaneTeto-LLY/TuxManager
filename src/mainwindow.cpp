@@ -19,13 +19,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "configuration.h"
-#include "i18n.h"
-
-#include <QActionGroup>
-#include <QApplication>
-#include <QMenu>
-#include <QMenuBar>
-#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -47,8 +40,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     this->ui->performanceLayout->addWidget(this->m_performanceWidget);
     this->ui->usersLayout->addWidget(this->m_usersWidget);
     this->ui->servicesLayout->addWidget(this->m_servicesWidget);
-
-    this->buildMenus();
 
     // Restore previous window layout
     if (!CFG->WindowGeometry.isEmpty())
@@ -93,53 +84,4 @@ void MainWindow::updateTabActivity(int index)
     this->m_performanceWidget->SetActive(index == 1);
     this->m_usersWidget->SetActive(index == 2);
     this->m_servicesWidget->SetActive(index == 3);
-}
-
-void MainWindow::buildMenus()
-{
-    // Options → Language selector. Language changes are applied by restarting
-    // the application so every widget, model and dialog is consistently rebuilt.
-    QMenu *optionsMenu = this->ui->menubar->addMenu(tr("Options"));
-    QMenu *languageMenu = optionsMenu->addMenu(tr("Language"));
-    languageMenu->setToolTipsVisible(true);
-
-    auto *group = new QActionGroup(languageMenu);
-    group->setExclusive(true);
-
-    const QString current = CFG->Language;
-    const auto addLanguageAction = [this, languageMenu, group, current](const QString &code, const QString &label)
-    {
-        QAction *action = languageMenu->addAction(label);
-        action->setCheckable(true);
-        action->setData(code);
-        action->setChecked(code == current);
-        group->addAction(action);
-    };
-
-    addLanguageAction(QString(), tr("System default"));
-    addLanguageAction(QStringLiteral("en"), tr("English"));
-    addLanguageAction(QStringLiteral("zh_CN"), tr("Chinese (Simplified)"));
-
-    connect(group, &QActionGroup::triggered, this, [this, group](QAction *action)
-    {
-        const QString newCode = action->data().toString();
-        if (newCode == CFG->Language)
-            return;
-
-        const QString newName = action->text();
-        const QString question = tr("Switch the interface language to \"%1\"?\n\nThe application needs to restart for the change to take effect.").arg(newName);
-        const auto answer = QMessageBox::question(this, tr("Language"), question,
-                                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-        if (answer != QMessageBox::Yes)
-        {
-            // Keep the previously active entry selected.
-            for (QAction *other : group->actions())
-                other->setChecked(other->data().toString() == CFG->Language);
-            return;
-        }
-
-        CFG->Language = newCode;
-        CFG->Save();
-        I18n::restartApplication();
-    });
 }

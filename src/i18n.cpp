@@ -17,22 +17,18 @@
  */
 
 #include "i18n.h"
-#include "configuration.h"
 #include "logger.h"
 
 #include <QCoreApplication>
-#include <QDir>
 #include <QFile>
 #include <QLibraryInfo>
 #include <QLocale>
-#include <QProcess>
-#include <QTimer>
 #include <QTranslator>
 #include <QtGlobal>
 
 namespace
 {
-    // Translators live for the whole application lifetime (until restart).
+    // Translators live for the whole application lifetime.
     QTranslator *appTranslator()
     {
         static QTranslator *t = new QTranslator();
@@ -102,29 +98,11 @@ namespace
         return false;
     }
 
-    QString resolveLanguageCode()
-    {
-        QString code = CFG->Language.trimmed();
-        if (code.isEmpty())
-            code = QLocale::system().name();
-        return code;
-    }
 }
 
-QStringList I18n::availableLanguageCodes()
+void I18n::installTranslators()
 {
-    // "" = follow system language; these are the shipped languages.
-    return { QString(), QStringLiteral("en"), QStringLiteral("zh_CN") };
-}
-
-QString I18n::configuredLanguage()
-{
-    return CFG->Language;
-}
-
-QString I18n::installTranslators()
-{
-    QString code = resolveLanguageCode();
+    const QString code = QLocale::system().name();
 
     // Always drop any previously installed translator first so a restart or
     // repeated call can never stack two translations.
@@ -136,7 +114,7 @@ QString I18n::installTranslators()
     if (isEnglishLanguage(code))
     {
         LOG_DEBUG("I18n: no translation needed, using built-in English UI");
-        return QStringLiteral("en");
+        return;
     }
 
     const QString matched = loadCatalog(appTranslator(), QStringLiteral("tux-manager"), code) ? code : QString();
@@ -144,7 +122,7 @@ QString I18n::installTranslators()
     {
         // No translation file for this language, fall back to English UI.
         LOG_INFO(QString("I18n: no translation available for '%1', falling back to English").arg(code));
-        return QStringLiteral("en");
+        return;
     }
 
     // Best effort: also localize Qt built-in dialogs (QMessageBox buttons etc.)
@@ -181,21 +159,4 @@ QString I18n::installTranslators()
 
     QCoreApplication::installTranslator(appTranslator());
     LOG_INFO(QString("I18n: using language '%1'").arg(matched));
-    return matched;
-}
-
-void I18n::restartApplication()
-{
-    const QString appPath = QCoreApplication::applicationFilePath();
-    const QStringList args = QCoreApplication::arguments().mid(1);
-    LOG_INFO(QString("I18n: restarting %1 to apply language change").arg(appPath));
-    if (QProcess::startDetached(appPath, args))
-    {
-        // Give the new instance a moment to start before we tear down.
-        QTimer::singleShot(200, qApp, &QCoreApplication::quit);
-    }
-    else
-    {
-        LOG_ERROR(QString("I18n: failed to restart %1, please start it manually").arg(appPath));
-    }
 }

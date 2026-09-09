@@ -105,8 +105,8 @@ int main(int argc, char *argv[])
     CFG->Load();
     CFG->ForceGpuDrm = parser.isSet(forceDrmOption);
 
-    // Install translations for the configured (or system) language before any
-    // widget is created, so all tr() calls already resolve to the right text.
+    // Install translations for the system language before any widget is
+    // created, so all tr() calls already resolve to the right text.
     I18n::installTranslators();
 
     LOG_INFO(QString("%1 %2 starting (verbosity=%3)").arg(a.applicationName(), a.applicationVersion()).arg(verbosity));

@@ -439,41 +439,6 @@
         <source> (superuser)</source>
         <translation type="finished">（超级用户）</translation>
     </message>
-    <message>
-        <location filename="../mainwindow.cpp" line="102" />
-        <source>Options</source>
-        <translation type="finished">选项</translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.cpp" line="103" />
-        <location filename="../mainwindow.cpp" line="131" />
-        <source>Language</source>
-        <translation type="finished">语言</translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.cpp" line="119" />
-        <source>System default</source>
-        <translation type="finished">系统默认</translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.cpp" line="120" />
-        <source>English</source>
-        <translation type="finished">英语</translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.cpp" line="121" />
-        <source>Chinese (Simplified)</source>
-        <translation type="finished">简体中文</translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.cpp" line="130" />
-        <source>Switch the interface language to "%1"?
-
-The application needs to restart for the change to take effect.</source>
-        <translation type="finished">确定将界面语言切换为“%1”吗？
-
-需要重启应用程序才能生效。</translation>
-    </message>
 </context>
 <context>
     <name>MemoryDetailWidget</name>
